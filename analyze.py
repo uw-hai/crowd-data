@@ -107,8 +107,9 @@ class Data(object):
 
 if __name__ == '__main__':
     df = load_rajpal_icml15()
-    data = Data(df)
-    data.make_plots('rajpal')
+    for t, df in df.groupby('worker_type'):
+        data = Data(df)
+        data.make_plots('rajpal-{}'.format(t))
 
     df = load_bragg_hcomp13(positive_only=False)
     data = Data(df)
