@@ -26,6 +26,12 @@ class Data(object):
         else:
             self.time = False
 
+    def make_data(self, outfname, time=False):
+        cols = ['worker', 'question', 'correct']
+        if time and self.time:
+            cols += 'time'
+        self.df[cols].to_csv(outfname, index=False)
+
     def make_plots(self, outdir):
         ensure_dir(outdir)
         self.plot_hist_n()
@@ -110,19 +116,24 @@ if __name__ == '__main__':
     for t, df in df.groupby('worker_type'):
         data = Data(df)
         data.make_plots('rajpal-{}'.format(t))
+        data.make_data('rajpal-{}.csv'.format(t))
 
     df = load_bragg_hcomp13(positive_only=False)
     data = Data(df)
     data.make_plots('bragg')
+    data.make_data('bragg.csv')
 
     df = load_bragg_hcomp13(positive_only=True)
     data = Data(df)
     data.make_plots('bragg-pos')
+    data.make_data('bragg-pos.csv')
 
     df = load_lin_aaai12(workflow='tag')
     data = Data(df)
     data.make_plots('lin-tag')
+    data.make_data('lin-tag.csv')
 
     df = load_lin_aaai12(workflow='wiki')
     data = Data(df)
     data.make_plots('lin-wiki')
+    data.make_data('lin-wiki.csv')
