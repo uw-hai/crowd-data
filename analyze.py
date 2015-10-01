@@ -11,6 +11,7 @@ from research_utils.util import tsplot_robust, ensure_dir
 from load import *
 
 class Data(object):
+    """Class for plotting HCOMP data."""
     def __init__(self, df):
         """Initialize.
 

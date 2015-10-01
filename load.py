@@ -2,9 +2,9 @@ import os
 import csv
 import pandas as pd
 
-RAJPAL_ICML15_DIR = '../rajpal-icml15/'
-BRAGG_HCOMP13_DIR = '../bragg-hcomp13/hcomp13-multilabel-data/'
-LIN_AAAI12_DIR    = '../lin-aaai12/'
+RAJPAL_ICML15_DIR = '~/data/rajpal-icml15/'
+BRAGG_HCOMP13_DIR = '~/data/bragg-hcomp13/hcomp13-multilabel-data/'
+LIN_AAAI12_DIR    = '~/data/lin-aaai12/'
 
 def load_lin_aaai12(data_dir=LIN_AAAI12_DIR, workflow='tag'):
     """Return dataframe with joined data for lin-aaai12.
