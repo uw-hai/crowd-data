@@ -69,6 +69,9 @@ class Data(object):
         plt.title('')
         return ax
 
+    def get_mean_accuracy(self):
+        return self.df.correct.mean()
+
     def plot_scatter_n_accuracy(self):
         ax = plt.gca()
         acc = self.df.groupby('worker')['correct'].mean()
