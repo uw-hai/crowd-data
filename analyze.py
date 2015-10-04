@@ -113,11 +113,14 @@ class Data(object):
 
 
 if __name__ == '__main__':
-    df = load_rajpal_icml15()
-    for t, df in df.groupby('worker_type'):
+    for worker_type in ['ordinary', 'normal', 'master', None]:
+        name = 'rajpal'
+        if worker_type is not None:
+            name += '-' + worker_type
+        df = load_rajpal_icml15(worker_type=worker_type)
         data = Data(df)
-        data.make_plots('rajpal-{}'.format(t))
-        data.make_data('rajpal-{}.csv'.format(t))
+        data.make_plots(name)
+        data.make_data('{}.csv'.format(name))
 
     df = load_bragg_hcomp13(positive_only=False)
     data = Data(df)

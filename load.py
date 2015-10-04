@@ -2,9 +2,10 @@ import os
 import csv
 import pandas as pd
 
-RAJPAL_ICML15_DIR = '~/data/rajpal-icml15/'
-BRAGG_HCOMP13_DIR = '~/data/bragg-hcomp13/hcomp13-multilabel-data/'
-LIN_AAAI12_DIR    = '~/data/lin-aaai12/'
+RAJPAL_ICML15_DIR = '/homes/gws/jbragg/data/rajpal-icml15/'
+BRAGG_HCOMP13_DIR = '/homes/gws/jbragg/data/bragg-hcomp13/hcomp13-multilabel-data/'
+LIN_AAAI12_DIR    = '/homes/gws/jbragg/data/lin-aaai12/'
+
 
 def load_lin_aaai12(data_dir=LIN_AAAI12_DIR, workflow='tag'):
     """Return dataframe with joined data for lin-aaai12.
@@ -64,8 +65,14 @@ def load_bragg_hcomp13(data_dir=BRAGG_HCOMP13_DIR, positive_only=False):
     df['question'] = df.item + '-' + df.label
     return df
 
-def load_rajpal_icml15(data_dir=RAJPAL_ICML15_DIR):
-    """Return dataframe with joined data for rajpal-icml15."""
+def load_rajpal_icml15(data_dir=RAJPAL_ICML15_DIR, worker_type=None):
+    """Return dataframe with joined data for rajpal-icml15.
+
+    Args:
+        worker_type:    Either 'ordinary', 'normal', 'master', or
+                        None (for all worker classes).
+
+    """
     # Load gold.
     with open(os.path.join(data_dir, 'questionsEMD'), 'r') as f:
         rows = list(csv.reader(f, delimiter='\t'))
@@ -90,4 +97,8 @@ def load_rajpal_icml15(data_dir=RAJPAL_ICML15_DIR):
     df = pd.concat(dfs, axis=0)
     df = df.merge(df_gold, on='question', how='left')
     df['correct'] = df['gt'].astype(int) == df['answer'].astype(int)
-    return df
+
+    if worker_type is not None:
+        return df[df.worker_type == worker_type]
+    else:
+        return df
