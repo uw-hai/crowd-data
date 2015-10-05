@@ -7,6 +7,7 @@ BRAGG_HCOMP13_DIR = '/homes/gws/jbragg/data/bragg-hcomp13/hcomp13-multilabel-dat
 LIN_AAAI12_DIR    = '/homes/gws/jbragg/data/lin-aaai12/'
 
 
+# TODO: Enable retrieval using workflow=None, as with Rajpal data.
 def load_lin_aaai12(data_dir=LIN_AAAI12_DIR, workflow='tag'):
     """Return dataframe with joined data for lin-aaai12.
 
@@ -84,7 +85,7 @@ def load_rajpal_icml15(data_dir=RAJPAL_ICML15_DIR, worker_type=None):
         df_gold = df_gold.reset_index()
 
     # Load answers without time stamps.
-    dfs = []
+    df_acc = pd.DataFrame()
     for t in ('ordinary', 'master', 'normal'):
         df = pd.read_csv(os.path.join(
             data_dir, '{}PoolResultsCSV'.format(t.capitalize())), header=None)
@@ -93,8 +94,11 @@ def load_rajpal_icml15(data_dir=RAJPAL_ICML15_DIR, worker_type=None):
         df.name = 'answer'
         df = df[df != 2].reset_index()
         df['worker_type'] = t
-        dfs.append(df)
-    df = pd.concat(dfs, axis=0)
+        df['worker'] = df['worker'].astype(int)
+        if len(df_acc) > 0:
+            df['worker'] += df_acc.worker.max() + 1
+        df_acc = pd.concat([df_acc, df], axis=0)
+    df = df_acc
     df = df.merge(df_gold, on='question', how='left')
     df['correct'] = df['gt'].astype(int) == df['answer'].astype(int)
 

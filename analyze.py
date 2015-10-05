@@ -70,7 +70,12 @@ class Data(object):
         return ax
 
     def get_mean_accuracy(self):
+        """Return mean question-level accuracy."""
         return self.df.correct.mean()
+
+    def get_n_workers(self):
+        """Return number of workers."""
+        return self.df.worker.nunique()
 
     def plot_scatter_n_accuracy(self):
         ax = plt.gca()
