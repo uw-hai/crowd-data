@@ -20,8 +20,8 @@ class Data(object):
         """Initialize.
 
         Args:
-            df:     Must have 'worker', 'question', 'correct' columns.
-                    Optionally, has 'time'.
+            df:     Must have 'worker', 'question', 'gt', 'answer',
+                    and 'correct' columns. Optionally, has 'time'.
 
         """
         self.df = df
@@ -71,7 +71,8 @@ class Data(object):
         answer_2 = df.answer == df.entity2
         assert all(answer_1 != answer_2)
         df['answer'] = answer_2.astype(int)
-        df['correct'] = df['answer'] == df['answer_gt']
+        df['gt'] = df['answer_gt']
+        df['correct'] = df['answer'] == df['gt']
 
         return cls(df)
 
@@ -87,10 +88,12 @@ class Data(object):
         df_gold.name = 'gt'
         df_gold = df_gold.reset_index()
         df = df.merge(df_gold, how='left', on=['item', 'label'])
-        df['correct'] = df['selected'].astype(int) == df['gt'].astype(int)
+        df['answer'] = df['selected'].astype(int)
+        df['gt'] = df['gt'].astype(int)
+        df['correct'] = df['answer'] == df['gt']
 
         if positive_only:
-            df = df[df['gt'].astype(int) == 1]
+            df = df[df['gt'] == 1]
 
         # Construct questions out of item-label combinations.
         df['question'] = df.item + '-' + df.label
@@ -133,14 +136,16 @@ class Data(object):
             df_acc = pd.concat([df_acc, df], axis=0)
         df = df_acc
         df = df.merge(df_gold, on='question', how='left')
-        df['correct'] = df['gt'].astype(int) == df['answer'].astype(int)
+        df['gt'] = df['gt'].astype(int)
+        df['answer'] = df['answer'].astype(int)
+        df['correct'] = df['gt'] == df['answer']
 
         if worker_type is not None:
             return cls(df[df.worker_type == worker_type])
         else:
             return cls(df)
-    #--------- Plotting methods. -----------
 
+    #--------- Plotting methods. -----------
     def make_data(self, outfname, time=False):
         cols = ['worker', 'question', 'correct']
         if time and self.time:
