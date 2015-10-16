@@ -196,6 +196,14 @@ class Data(object):
         """Return number of workers."""
         return self.df.worker.nunique()
 
+    def get_n_answers(self):
+        """Return number of answers."""
+        return len(self.df)
+
+    def get_n_questions(self):
+        """Return number of questions."""
+        return self.df.question.nunique()
+
     def plot_scatter_n_accuracy(self):
         ax = plt.gca()
         acc = self.df.groupby('worker')['correct'].mean()
