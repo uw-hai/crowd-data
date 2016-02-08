@@ -18,6 +18,7 @@ class LoadDataTest(unittest.TestCase):
             worker_type='normal')
         self.data['rajpal_master'] = analyze.Data.from_rajpal_icml15(
             worker_type='master')
+        self.data['bragg_teach'] = analyze.Data.from_bragg_teach()
 
     def test_combine(self):
         data_all = analyze.Data.from_rajpal_icml15(worker_type=None)
