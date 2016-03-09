@@ -258,6 +258,40 @@ class Data(object):
         plt.title('')
         return ax
 
+    def plot_scatter_n_accuracy_joint(self, data_objects, labels, label_self, markers):
+        """Make plot from this and other data objects.
+
+        Args:
+            data_objects ([Data]): Other Data objects to include in plot.
+            labels ([str]): Labels to use for Data_objects.
+            label_self (str): Label to use for this Data object.
+
+        Returns: Axis object.
+
+        """
+        dataframes = [self.df] + [data.df for data in data_objects]
+        labels = [label_self] + labels
+
+        acc = []
+        n = []
+        statistics = []
+        for df, label in zip(dataframes, labels):
+            acc = df.groupby('worker')['correct'].mean()
+            n = df.groupby('worker')['question'].count()
+            df_new = pd.concat([acc, n], axis=1)
+            df_new['dataset'] = label
+            statistics.append(df_new)
+
+        df = pd.concat(statistics, axis=0)
+        sns.lmplot('question', 'correct', data=df, hue='dataset',
+                   markers=markers, fit_reg=False)
+        plt.xlabel('Number of questions answered')
+        plt.ylabel('Accuracy')
+        plt.xlim((0, None))
+        plt.ylim((0, 1))
+        plt.title('')
+        return plt.gca()
+
     def plot_rolling_mean_accuracy(self, window=10):
         for w, df in self.df.groupby('worker'):
             df = df.reset_index(drop=True)
@@ -454,7 +488,19 @@ def make_other_plots():
     data.make_plots('lin-wiki')
     data.make_data('lin-wiki.csv')
 
+def make_aamas_plot():
+    """Make scatter plot with all datasets."""
+    markers = ['x','o','v']
+    data1 = Data.from_rajpal_icml15(worker_type=None)
+    data2 = Data.from_lin_aaai12(workflow='tag')
+    data3 = Data.from_lin_aaai12(workflow='wiki')
+    ax = data1.plot_scatter_n_accuracy_joint(
+        [data2, data3], labels=['LinTag', 'LinWiki'], label_self='Rajpal',
+        markers=markers)
+    plt.savefig('aamas_new_plot.png')
+
 
 if __name__ == '__main__':
     make_bragg_teach_plots()
     make_other_plots()
+    make_aamas_plot()
