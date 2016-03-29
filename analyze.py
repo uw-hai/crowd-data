@@ -40,7 +40,7 @@ class Data(object):
     #--------- Factory methods. -------------
     # TODO: Enable retrieval using workflow=None, as with Rajpal data.
     @classmethod
-    def from_lin_aaai12(cls, data_dir=LIN_AAAI12_DIR, workflow='tag'):
+    def from_lin_aaai12(cls, data_dir=os.environ['LIN_AAAI12_DIR'], workflow='tag'):
         """Return dataframe with joined data for lin-aaai12.
 
         Args:
@@ -83,7 +83,7 @@ class Data(object):
         return cls(df)
 
     @classmethod
-    def from_bragg_hcomp13(cls, data_dir=BRAGG_HCOMP13_DIR,
+    def from_bragg_hcomp13(cls, data_dir=os.environ['BRAGG_HCOMP13_DIR'],
                            positive_only=False):
         df = pd.read_csv(os.path.join(data_dir, 'data.csv'))
         df_gold = pd.read_csv(os.path.join(data_dir, 'gold.csv'))
@@ -106,7 +106,7 @@ class Data(object):
         return cls(df)
 
     @classmethod
-    def from_bragg_teach(cls, data_dir=BRAGG_TEACH_DIR, min_questions=None, conditions=None, relations=None):
+    def from_bragg_teach(cls, data_dir=os.environ['BRAGG_TEACH_DIR'], min_questions=None, conditions=None, relations=None):
         """Return object from teaching data."""
         df = pd.read_csv(os.path.join(data_dir, 'data.csv'))
         df = df[df.finalobservation & (df.action == 'ask')]
@@ -136,7 +136,7 @@ class Data(object):
         return cls(df[['question', 'worker', 'answer', 'gt', 'time', 'correct', 'condition']])
 
     @classmethod
-    def from_rajpal_icml15(cls, data_dir=RAJPAL_ICML15_DIR, worker_type=None):
+    def from_rajpal_icml15(cls, data_dir=os.environ['RAJPAL_ICML15_DIR'], worker_type=None):
         """Return dataframe with joined data for rajpal-icml15.
 
         Args:
@@ -346,7 +346,7 @@ class TeachData(Data):
 
     #--------- Factory methods. -------------
     @classmethod
-    def from_bragg_teach(cls, data_dir=BRAGG_TEACH_DIR, min_questions=None, conditions=None):
+    def from_bragg_teach(cls, data_dir=os.environ['BRAGG_TEACH_DIR'], min_questions=None, conditions=None):
         """Return object from teaching data."""
         df = pd.read_csv(os.path.join(data_dir, 'data.csv'))
         df = df.rename(columns={
@@ -445,7 +445,7 @@ def get_feedback(data):
 def get_feedback_bragg_teach():
     """Get feedback for bragg-teach dataset and save to feedback.csv"""
     get_feedback(
-        os.path.join(BRAGG_TEACH_DIR, 'data.csv')).to_csv('feedback.csv')
+        os.path.join(os.environ['BRAGG_TEACH_DIR'], 'data.csv')).to_csv('feedback.csv')
 
 
 def make_bragg_teach_plots():
