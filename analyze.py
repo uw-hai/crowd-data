@@ -11,12 +11,6 @@ import seaborn as sns
 
 from research_utils.util import tsplot_robust, ensure_dir
 
-RAJPAL_ICML15_DIR = '/homes/gws/jbragg/data/rajpal-icml15/'
-BRAGG_HCOMP13_DIR = '/homes/gws/jbragg/data/bragg-hcomp13/hcomp13-multilabel-data/'
-LIN_AAAI12_DIR = '/homes/gws/jbragg/data/lin-aaai12/'
-BRAGG_TEACH_DIR = '/homes/gws/jbragg/data/bragg-teach/'
-
-
 class Data(object):
     """Class for retrieving and plotting HCOMP data."""
 
