@@ -100,9 +100,29 @@ class Data(object):
         return cls(df)
 
     @classmethod
-    def from_bragg_teach(cls, data_dir=os.environ['BRAGG_TEACH_DIR'], min_questions=None, conditions=None, relations=None):
-        """Return object from teaching data."""
+    def from_bragg_teach(cls, data_dir=os.environ['BRAGG_TEACH_DIR'],
+                         min_questions=None, relations=None, conditions=None):
+        """Return object from teaching data.
+
+        Note:
+            Ignores teaching actions.
+
+        Args:
+            data_dir (Optional[str]): Data directory.
+            min_questions (Optional[int]): Minimum number of questions asked worker.
+            relations (Optional[[str]]): Relations to include.
+            conditions (Optional[[str]]): Names of conditions. Can be:
+                'pilot_10': Include teach 10 times (first study).
+                'pilot_20': Include teach 20 times (first study).
+                'rl_v1': Include non-parallel exp (second study).
+                'rl_v2': Include parallel exp (second study).
+
+        Returns:
+            analyze.Data: Data object.
+
+        """
         df = pd.read_csv(os.path.join(data_dir, 'data.csv'))
+        # Ignore teaching actions.
         df = df[df.finalobservation & (df.action == 'ask')]
         df = df.rename(columns={
             'questionid': 'question',
@@ -112,21 +132,34 @@ class Data(object):
             'observationtime': 'time',
         })
         df['condition'] = df['condition'].map(json.loads)
-        df['condition'] = df['condition'].map(lambda d: d['policy']['n'])
         if min_questions is not None:
             df = pd.concat([df for worker, df in df.groupby(
                 'worker') if df.question.nunique() >= min_questions])
+        def condition_name(condition):
+            if 'n' in condition['policy'] and condition['policy']['n'] == 3:
+                return 'pilot_3'
+            elif 'n' in condition['policy'] and condition['policy']['n'] == 10:
+                return 'pilot_10'
+            elif 'n' in condition['policy'] and condition['policy']['n'] == 20:
+                return 'pilot_20'
+            elif 'explore_policy' in condition['policy'] and condition['ask_bonus'] == 0.04:
+                return 'rl_v1'
+            elif 'explore_policy' in condition['policy'] and condition['ask_bonus'] == 0.08:
+                return 'rl_v2'
+        df['condition'] = df['condition'].map(condition_name)
         if conditions is not None:
-            df = df[df.condition.isin(conditions)]
+            df = df[df['condition'].isin(conditions)]
 
         df['gt'] = df['gt'].map(json.loads)
         df['answer'] = df['answer'].map(json.loads)
         if relations is not None:
             for column in ['gt', 'answer']:
                 df[column] = df[column].map(lambda d: dict(
-                    (relation, d[relation]) for relation in relations))
+                    (relation, d[relation]) for relation in relations) if
+                    d is not None else None)
         df['correct'] = df['gt'] == df['answer']
 
+        df['condition'] = df['condition'].map(lambda x: json.dumps(x, sort_keys=True))
         return cls(df[['question', 'worker', 'answer', 'gt', 'time', 'correct', 'condition']])
 
     @classmethod
@@ -321,7 +354,12 @@ class Data(object):
 
 
 class TeachData(Data):
-    """Class for retrieving and plotting Teach Data."""
+    """Class for retrieving and plotting Teach Data.
+
+    Unlike analyze.Data, this class is not restricted to one type of action.
+
+    """
+    # TODO: Refactor Data and TeachData classes.
 
     def __init__(self, df):
         """Initialize.
@@ -329,6 +367,8 @@ class TeachData(Data):
         Args:
             df:     Must have 'worker', 'question', 'gt', 'answer',
                     and 'correct' columns. Optionally, has 'time'.
+                    Unlike analyze.Data, must also have 'answertype', 'action',
+                    'final' columns.
 
         """
         self.df = df
@@ -340,8 +380,25 @@ class TeachData(Data):
 
     #--------- Factory methods. -------------
     @classmethod
-    def from_bragg_teach(cls, data_dir=os.environ['BRAGG_TEACH_DIR'], min_questions=None, conditions=None):
-        """Return object from teaching data."""
+    def from_bragg_teach(cls, data_dir=os.environ['BRAGG_TEACH_DIR'],
+                         min_questions=None, relations=None, conditions=None):
+        """Return object from teaching data.
+
+        Args:
+            data_dir (Optional[str]): Data directory.
+            min_questions (Optional[int]): Minimum number of questions asked worker.
+            relations (Optional[[str]]): Relations to include.
+            conditions (Optional[[str]]): Names of conditions. Can be:
+                'pilot_10': Include teach 10 times (first study).
+                'pilot_20': Include teach 20 times (first study).
+                'rl_v1': Include non-parallel exp (second study).
+                'rl_v2': Include parallel exp (second study).
+
+        Returns:
+            analyze.TeachData: Data object.
+
+        """
+        # TODO: Much of this code is duplicate of Data.from_bragg_teach().
         df = pd.read_csv(os.path.join(data_dir, 'data.csv'))
         df = df.rename(columns={
             'questionid': 'question',
@@ -352,17 +409,34 @@ class TeachData(Data):
             'observationtime': 'time',
             'finalobservation': 'final',
         })
-        df['gt'] = df['gt'].map(json.loads)
-        df['answer'] = df['answer'].map(json.loads)
         df['condition'] = df['condition'].map(json.loads)
-        df['condition'] = df['condition'].map(lambda d: d['policy']['n'])
-        df['correct'] = df['gt'] == df['answer']
-
         if min_questions is not None:
             df = pd.concat([df for worker, df in df.groupby(
                 'worker') if df.question.nunique() >= min_questions])
+        def condition_name(condition):
+            if 'n' in condition['policy'] and condition['policy']['n'] == 3:
+                return 'pilot_3'
+            elif 'n' in condition['policy'] and condition['policy']['n'] == 10:
+                return 'pilot_10'
+            elif 'n' in condition['policy'] and condition['policy']['n'] == 20:
+                return 'pilot_20'
+            elif 'explore_policy' in condition['policy'] and condition['ask_bonus'] == 0.04:
+                return 'rl_v1'
+            elif 'explore_policy' in condition['policy'] and condition['ask_bonus'] == 0.08:
+                return 'rl_v2'
+        df['condition'] = df['condition'].map(condition_name)
         if conditions is not None:
-            df = df[df.condition.isin(conditions)]
+            df = df[df['condition'].isin(conditions)]
+
+        df['gt'] = df['gt'].map(json.loads)
+        df['answer'] = df['answer'].map(json.loads)
+        if relations is not None:
+            for column in ['gt', 'answer']:
+                df[column] = df[column].map(lambda d: dict(
+                    (relation, d[relation]) for relation in relations))
+        df['correct'] = df['gt'] == df['answer']
+
+        df['condition'] = df['condition'].map(lambda x: json.dumps(x, sort_keys=True))
         return cls(df[['question', 'worker', 'answer', 'answertype', 'gt', 'time', 'correct', 'condition', 'action', 'final']])
 
     def n_observations(self, final):
@@ -444,17 +518,23 @@ def get_feedback_bragg_teach():
 
 def make_bragg_teach_plots():
     """Make all bragg-teach plots."""
-    data = Data.from_bragg_teach(min_questions=40, conditions=[3, 20])
-    data.make_plots('bragg-teach')
-    data.make_data('bragg-teach.csv')
-    data = Data.from_bragg_teach(conditions=[3, 20])
-    data.make_plots('bragg-teach_no_min')
-    for relation in ['died in', 'born in', 'has nationality', 'lived in', 'traveled to']:
-        data = Data.from_bragg_teach(min_questions=40, conditions=[
-                                     3, 20], relations=[relation])
-        data.make_plots('bragg-teach-{}'.format(relation))
-    data = TeachData.from_bragg_teach(min_questions=40, conditions=[3, 20])
-    data.make_plots('bragg-teach')
+    options1 = {'conditions': ['pilot_3', 'pilot_20']}
+    options2 = {'conditions': ['pilot_3', 'pilot_20'], 'min_questions': 40}
+    options3 = {'conditions': ['rl_v1']}
+    options4 = {'conditions': ['rl_v2']}
+    all_options = [options1, options2, options3, options4]
+    for options in all_options:
+        name = '_'.join(options['conditions'])
+        if 'min_questions' in options:
+            name += '_min_{}_questions'.format(options['min_questions'])
+        data = Data.from_bragg_teach(**options)
+        data.make_plots('bragg-teach-{}'.format(name))
+        data.make_data('bragg-teach-{}.csv'.format(name))
+        for relation in ['died in', 'born in', 'has nationality', 'lived in', 'traveled to']:
+            data = Data.from_bragg_teach(relations=[relation], **options)
+            data.make_plots('bragg-teach-{}-{}'.format(name, relation))
+        data = TeachData.from_bragg_teach(**options)
+        data.make_plots('2bragg-teach-{}'.format(name))
 
 
 def make_other_plots():
