@@ -1,8 +1,18 @@
+"""Test cases for analyze.py."""
 import unittest
-import analyze
+from . import analyze
+
 
 class LoadDataTest(unittest.TestCase):
+    """Class to test loading live datasets.
+
+    Only works if following environment variables are set:
+        BRAGG_TEACH_DIR, BRAGG_HCOMP13_DIR, LIN_AAAI12_DIR, RAJPAL_ICML15_DIR
+
+    """
+
     def setUp(self):
+        """Setup."""
         self.data = dict()
         self.data['lin_tag'] = analyze.Data.from_lin_aaai12(workflow='tag')
         self.data['lin_wiki'] = analyze.Data.from_lin_aaai12(workflow='wiki')
@@ -21,6 +31,7 @@ class LoadDataTest(unittest.TestCase):
         self.data['bragg_teach'] = analyze.Data.from_bragg_teach()
 
     def test_combine(self):
+        """Test slices of Rajpal data load correctly."""
         data_all = analyze.Data.from_rajpal_icml15(worker_type=None)
         data_ordinary = analyze.Data.from_rajpal_icml15(worker_type='ordinary')
         data_normal = analyze.Data.from_rajpal_icml15(worker_type='normal')
@@ -28,10 +39,11 @@ class LoadDataTest(unittest.TestCase):
 
         self.assertEqual(
             data_all.get_n_workers(),
-            data_ordinary.get_n_workers() + data_normal.get_n_workers() + \
+            data_ordinary.get_n_workers() + data_normal.get_n_workers() +
             data_master.get_n_workers())
 
     def test_columns(self):
+        """Test data has correct columns."""
         for df in (d.df for d in self.data.itervalues()):
             self.assertIn('worker', df)
             self.assertIn('question', df)

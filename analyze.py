@@ -1,15 +1,15 @@
+"""Classes to import crowdsourcing data and analyze it."""
 import os
 import csv
 import json
 import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib import pyplot as plt
-import scipy.stats as ss
-import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from research_utils.util import tsplot_robust, ensure_dir
+from .research_utils.util import tsplot_robust, ensure_dir
+
 
 class Data(object):
     """Class for retrieving and plotting HCOMP data."""
@@ -141,6 +141,7 @@ class Data(object):
         if min_questions is not None:
             df = pd.concat([df for worker, df in df.groupby(
                 'worker') if df.question.nunique() >= min_questions])
+
         def condition_name(condition):
             if 'n' in condition['policy'] and condition['policy']['n'] == 3:
                 return 'pilot_3'
@@ -165,7 +166,8 @@ class Data(object):
                     d is not None else None)
         df['correct'] = df['gt'] == df['answer']
 
-        df['condition'] = df['condition'].map(lambda x: json.dumps(x, sort_keys=True))
+        df['condition'] = df['condition'].map(
+            lambda x: json.dumps(x, sort_keys=True))
         return cls(df[['question', 'worker', 'answer', 'gt', 'time', 'correct', 'condition']])
 
     @classmethod
@@ -423,6 +425,7 @@ class TeachData(Data):
         if min_questions is not None:
             df = pd.concat([df for worker, df in df.groupby(
                 'worker') if df.question.nunique() >= min_questions])
+
         def condition_name(condition):
             if 'n' in condition['policy'] and condition['policy']['n'] == 3:
                 return 'pilot_3'
@@ -446,7 +449,8 @@ class TeachData(Data):
                     (relation, d[relation]) for relation in relations))
         df['correct'] = df['gt'] == df['answer']
 
-        df['condition'] = df['condition'].map(lambda x: json.dumps(x, sort_keys=True))
+        df['condition'] = df['condition'].map(
+            lambda x: json.dumps(x, sort_keys=True))
         return cls(df[['question', 'worker', 'answer', 'answertype', 'gt', 'time', 'correct', 'condition', 'action', 'final']])
 
     def n_observations(self, final):
@@ -516,7 +520,7 @@ def get_feedback(data):
                         'feedback',
                         'workerid',
                         'condition',
-                        'action'
+                        'action',
                         ]]
 
 
@@ -543,8 +547,8 @@ def make_bragg_teach_plots():
         for relation in ['died in', 'born in', 'has nationality', 'lived in', 'traveled to']:
             data = Data.from_bragg_teach(relations=[relation], **options)
             data.make_plots('bragg-teach-{}-{}'.format(name, relation))
-        data = TeachData.from_bragg_teach(**options)
-        data.make_plots('2bragg-teach-{}'.format(name))
+        teach_data = TeachData.from_bragg_teach(**options)
+        teach_data.make_plots('2bragg-teach-{}'.format(name))
 
 
 def make_other_plots():
@@ -572,9 +576,10 @@ def make_other_plots():
     data.make_plots('lin-wiki')
     data.make_data('lin-wiki.csv')
 
+
 def make_aamas_plot():
     """Make scatter plot with all datasets."""
-    markers = ['x','o','v']
+    markers = ['x', 'o', 'v']
     data1 = Data.from_rajpal_icml15(worker_type=None)
     data2 = Data.from_lin_aaai12(workflow='tag')
     data3 = Data.from_lin_aaai12(workflow='wiki')
