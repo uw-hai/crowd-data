@@ -18,8 +18,9 @@ class Data(object):
         """Initialize.
 
         Args:
-            df:     Must have 'worker', 'question', 'gt', 'answer',
-                    and 'correct' columns. Optionally, has 'time'.
+            df (pandas.DataFrame): Data. Must have 'worker', 'question', 'gt',
+                   'answer', and 'correct' columns. Optionally, has 'time'.
+            final (bool): Restrict to final observations only.
 
         """
         self.df = df
@@ -35,10 +36,10 @@ class Data(object):
     # TODO: Enable retrieval using workflow=None, as with Rajpal data.
     @classmethod
     def from_lin_aaai12(cls, data_dir=None, workflow='tag'):
-        """Return dataframe with joined data for lin-aaai12.
+        """Load from joined data for lin-aaai12.
 
         Args:
-            workflow:   Either 'tag' or 'wiki' for different dataset.
+            workflow (str): Either 'tag' or 'wiki' for different dataset.
 
         """
         if data_dir is None:
@@ -105,10 +106,11 @@ class Data(object):
     @classmethod
     def from_bragg_teach(cls, data_dir=None,
                          min_questions=None, relations=None, conditions=None):
-        """Return object from teaching data.
+        """Load from teaching data.
 
         Note:
-            Ignores teaching actions.
+            - Ignores teaching actions.
+            - Includes timestamps.
 
         Args:
             data_dir (Optional[str]): Data directory.
@@ -454,7 +456,13 @@ class TeachData(Data):
         return cls(df[['question', 'worker', 'answer', 'answertype', 'gt', 'time', 'correct', 'condition', 'action', 'final']])
 
     def n_observations(self, final):
-        """Number of observations, by condition."""
+        """Timeseries plots of number of observations, by condition.
+
+        Yields:
+            observation (str): Observation type ('ask', 'exp_ack', 'exp_redo').
+            ax (matplotlib.axes.Axes): Axes object.
+
+        """
         if final:
             df = self.df[self.df.final]
         else:
