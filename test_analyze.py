@@ -30,26 +30,30 @@ class LoadDataTest(unittest.TestCase):
             worker_type='master')
         self.data['bragg_teach'] = analyze.Data.from_bragg_teach()
 
-    def test_combine(self):
+    def test_rajpal(self):
         """Test slices of Rajpal data load correctly."""
-        data_all = analyze.Data.from_rajpal_icml15(worker_type=None)
-        data_ordinary = analyze.Data.from_rajpal_icml15(worker_type='ordinary')
-        data_normal = analyze.Data.from_rajpal_icml15(worker_type='normal')
-        data_master = analyze.Data.from_rajpal_icml15(worker_type='master')
-
         self.assertEqual(
-            data_all.get_n_workers(),
-            data_ordinary.get_n_workers() + data_normal.get_n_workers() +
-            data_master.get_n_workers())
+            self.data['rajpal_all'].get_n_workers(),
+            self.data['rajpal_ordinary'].get_n_workers() +
+            self.data['rajpal_normal'].get_n_workers() +
+            self.data['rajpal_master'].get_n_workers())
 
     def test_columns(self):
-        """Test data has correct columns."""
+        """Test data has required columns."""
         for df in (d.df for d in self.data.itervalues()):
             self.assertIn('worker', df)
             self.assertIn('question', df)
             self.assertIn('answer', df)
             self.assertIn('gt', df)
             self.assertIn('correct', df)
+
+#    def test_bragg_teach(self):
+#        """Test BraggTeach data loads correctly.
+#
+#        Assumes data contains all conditions.
+#
+#        """
+#        self.data['bragg_teach'].df
 
 if __name__ == '__main__':
     unittest.main()
