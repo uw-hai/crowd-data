@@ -40,6 +40,28 @@ class Data(object):
             self.df['condition'] = 'all'
 
     #--------- Factory methods. -------------
+    @classmethod
+    def from_dataset(cls, name, options=None):
+        """Load from appropriate constructor.
+
+        Args:
+            name (str): Dataset name.
+            options (Optional[dict]): Dataset options.
+
+        """
+        if options is None:
+            options = dict()
+        if name == 'lin_aaai12':
+            return cls.from_lin_aaai12(**options)
+        elif name == 'bragg_hcomp13':
+            return cls.from_bragg_hcomp13(**options)
+        elif name == 'bragg_teach':
+            return cls.from_bragg_teach(**options)
+        elif name == 'rajpal_icml15':
+            return cls.from_rajpal_icml15(**options)
+        else:
+            raise NotImplementedError
+
     # TODO: Enable retrieval using workflow=None, as with Rajpal data.
     @classmethod
     def from_lin_aaai12(cls, data_dir=None, workflow='tag'):
@@ -129,6 +151,7 @@ class Data(object):
                 all relations).
             conditions (Optional[[str]]): Names of conditions. Can be
                 include following conditions (None defaults to all):
+                - 'pilot_3': Include teach 3 times (first study).
                 - 'pilot_10': Include teach 10 times (first study).
                 - 'pilot_20': Include teach 20 times (first study).
                 - 'rl_v1': Include non-parallel exp (second study).
