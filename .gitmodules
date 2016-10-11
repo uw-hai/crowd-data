@@ -2,3 +2,6 @@
 	path = crowddata/answers/research_utils
 	url = https://github.com/uwcrowdlab/gears.git
 	branch = master
+[submodule "crowddata/questions/relation_data_helper"]
+	path = crowddata/questions/relation_data_helper
+	url = git@github.com:uwcrowdlab/relation-data.git
