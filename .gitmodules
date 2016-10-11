@@ -1,4 +1,4 @@
 [submodule "research_utils"]
-	path = research_utils
+	path = crowddata/answers/research_utils
 	url = https://github.com/uwcrowdlab/gears.git
 	branch = master
