@@ -10,14 +10,17 @@ import util
 import json
 
 
-def get_flickr_photos(query, pages, api_key=os.environ['FLICKR_API_KEY'], per_page=100):
+def get_flickr_photos(pages, api_key=os.environ['FLICKR_API_KEY'], **queryargs):
     """Get photo details from Flickr for the given query.
 
     Args:
-        query (str): Search query.
         pages ((int, int)): Start and end page.
         api_key (str): Flickr API key.
-        per_page (int): Number of results to return per page. Max is 500.
+        queryargs (dict): Additional arguments. For more details, see
+            https://www.flickr.com/services/api/flickr.photos.search.html.
+            Important to use "sort=relevance", which is not default, to match
+            web interface results. For example usage, see
+            make_house_sparrow_or_sparrow().
 
     """
     n_pages = None
@@ -27,9 +30,9 @@ def get_flickr_photos(query, pages, api_key=os.environ['FLICKR_API_KEY'], per_pa
         logging.info('Querying page {} of {}'.format(page, pages[1]))
         if n_pages is not None and page > n_pages:
             break
-        data = dict(api_key=api_key, query=urllib2.quote(query), per_page=per_page, page=page)
-        res = urllib2.urlopen(
-            'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key={api_key}&text={query}&page={page}'.format(**data))
+        data = dict(api_key=api_key, page=page)
+        data.update(queryargs)
+        res = urllib2.urlopen('https://api.flickr.com/services/rest/?method=flickr.photos.search&{}'.format(urllib.urlencode(data)))
         res_string = res.read()
         root = ET.fromstring(res_string)
         photos = root.find('photos')
@@ -48,21 +51,54 @@ def get_flickr_photos(query, pages, api_key=os.environ['FLICKR_API_KEY'], per_pa
             data_out.append(data)
     return data_out
 
-def make_house_sparrow_or_sparrow(seed=None):
+def make_house_sparrow_or_sparrow(
+        seed=None,
+        rawdir=None,
+        webdir=os.environ['SPARROW_FLICKR_WEB']):
+    """Make house sparrow or sparrow task.
+
+    Args:
+        seed: Hashable seed.
+        rawdir (str): Directory to store results before randomization.
+        webdir (str): Directory to store randomized and normalized task.
+
+    """
     if seed is not None:
         random.seed(seed)
-    sparrows = get_flickr_photos(query='sparrow', pages=(1, 2))
-    house_sparrows = get_flickr_photos(query='house sparrow', pages=(1, 2))
+    options = dict(per_page=100, content_type=1, sort='relevance')
+    sparrows = get_flickr_photos(pages=(1, 2), text='sparrow', **options)
+    house_sparrows = get_flickr_photos(pages=(1, 2), text='house sparrow', **options)
     for i, sparrow in enumerate(sparrows):
         sparrow['query'] = 'sparrow'
         sparrow['result_ind'] = i
+
+        # Write intermediary results.
+        if rawdir is not None:
+            util.ensure_dir(os.path.join(rawdir, 'images', 'sparrow'))
+            sparrow['rawpath'] = 'images/sparrow/{}.jpg'.format(sparrow['id'])
+            urllib.urlretrieve(sparrow['url'], os.path.join(rawdir, sparrow['rawpath']))
     for i, sparrow in enumerate(house_sparrows):
         sparrow['query'] = 'house sparrow'
         sparrow['result_ind'] = i
+
+        # Write intermediary results.
+        if rawdir is not None:
+            util.ensure_dir(os.path.join(rawdir, 'images', 'house_sparrow'))
+            sparrow['rawpath'] = 'images/house_sparrow/{}.jpg'.format(sparrow['id'])
+            urllib.urlretrieve(sparrow['url'], os.path.join(rawdir, sparrow['rawpath']))
+
+    # Write more intermediary results.
+    if rawdir is not None:
+        with open(os.path.join(rawdir, 'query_sparrow.csv'), 'w') as f:
+            writer = csv.DictWriter(f, fieldnames=sparrows[0].keys())
+            writer.writerows(sparrows)
+        with open(os.path.join(rawdir, 'query_house_sparrow.csv'), 'w') as f:
+            writer = csv.DictWriter(f, fieldnames=house_sparrows[0].keys())
+            writer.writerows(house_sparrows)
+
     all_sparrows = sparrows + house_sparrows
     random.shuffle(all_sparrows)
 
-    webdir = os.environ['SPARROW_FLICKR_WEB']
     webdir_images = os.path.join(webdir, 'images')
     util.ensure_dir(webdir_images)
 
@@ -76,4 +112,4 @@ def make_house_sparrow_or_sparrow(seed=None):
         json.dump(dict(data=sparrows_out), f)
 
 if __name__ == '__main__':
-    make_house_sparrow_or_sparrow(seed=0)
+    make_house_sparrow_or_sparrow(seed=0, rawdir=os.environ['SPARROW_FLICKR_RAW'], webdir=os.environ['SPARROW_FLICKR_WEB'])
