@@ -109,29 +109,34 @@ def get_flickr_photos(query, pages, query_type='text', api_key=os.environ['FLICK
             data_out.append(data)
     return data_out
 
-def make_subclusters(queries, rawdir, webdir, n_images, query_indices, seed=None):
+def make_subclusters(queries, n_images, rawdir, webdir, timeout=None, seed=None):
     """Make subclusters from Bing image searches.
 
     Args:
         queries ([dict]): List of query arguments.
+        n_images ([int]): Number of results per query.
         rawdir (str): Directory to store raw partial results. Each subquery
             will create rawdir/{QUERY}/images.json and images of the form
             rawdir/{QUERY}/images/*.{gif,png,jpeg}.
         webdir (str):
-        n_images (int): Number of images to fetch per query.
-        query_indices ([int]): List of indices into queries indicating which
-            subclusters to use for randomized dataset.
+        timeout (Optional[int]): Seconds until timeout.
+        seed: Seed for randomization of final dataset.
 
     """
-    for query in queries:
+    n_images_list = n_images
+    # Assume wget does not timeout more than half of time.
+    for query, n_images in zip(queries, n_images_list):
+        n_images_safe = int(round(n_images * 1.5))
         query_name = dict_to_str(query)
-        images = get_bing_images(n_images=n_images, offset=0, **query)
+        images = get_bing_images(n_images=n_images_safe, offset=0, **query)
         query_subdir = os.path.join(rawdir, query_name)
         json_path = os.path.join(query_subdir, 'images.json')
         if not os.path.exists(json_path):
             ensure_dir(os.path.join(query_subdir, 'images'))
             images_succeeded = []
             for image in images:
+                if len(images_succeeded) == n_images:
+                    break
                 if image['encodingFormat'] == 'animatedgif':
                     ext = 'gif'
                 else:
@@ -142,6 +147,8 @@ def make_subclusters(queries, rawdir, webdir, n_images, query_indices, seed=None
                 wget_extra_args = [
                     '--header', 'Accept: text/html', '--user-agent',
                     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0']
+                if timeout is not None:
+                    wget_extra_args += ['--timeout', str(timeout)]
                 try:
                     subprocess.check_output(
                         ['wget', image['contentUrl'], '-O', outpath] + wget_extra_args)
@@ -169,8 +176,8 @@ def make_subclusters(queries, rawdir, webdir, n_images, query_indices, seed=None
     # Create webdir task.
     ensure_dir(os.path.join(webdir, 'images'))
     task_images = []
-    for query_index in query_indices:
-        subdir = os.path.join(rawdir, dict_to_str(queries[query_index]))
+    for query in queries:
+        subdir = os.path.join(rawdir, dict_to_str(query))
         with open(os.path.join(subdir, 'images.json'), 'r') as fp:
             images = json.load(fp)
             for image in images:

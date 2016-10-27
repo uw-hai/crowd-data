@@ -92,13 +92,31 @@ def make_bird_subclusters():
                {'query': 'bird diagram', 'imageType': 'Photo'},
                {'query': 'people feeding birds', 'imageType': 'Photo'},
                ]
+    n_images = [
+        2,
+        2,
+        2,
+        24,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2]
+
     for query in queries:
         query.update(base_query)
 
     util.make_subclusters(
         queries=queries, rawdir=os.environ['BIRD_OR_NOT_RAW'],
-        webdir=os.environ['BIRD_OR_NOT_WEB'], n_images=20,
-        query_indices=[0, 1, 3], seed=0)
+        #webdir=os.environ['BIRD_OR_NOT_WEB'], n_images=20,
+        #query_indices=[0, 1, 3], seed=0)
+        webdir=os.environ['BIRD_OR_NOT_WEB'],
+        n_images=n_images, seed=0, timeout=20)
 
 def make_birds_flickr_dataset():
     """Datasets called birds_flickr_1 and birds_flickr_2"""
