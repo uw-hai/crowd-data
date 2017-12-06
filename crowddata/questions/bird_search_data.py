@@ -1,3 +1,5 @@
+"""Datasets from Bing and Flickr"""
+# TODO: Rename this file.
 import random
 import os
 import urllib
@@ -93,25 +95,25 @@ def make_bird_subclusters():
                {'query': 'people feeding birds', 'imageType': 'Photo'},
                ]
     n_images = [
-        2,
-        2,
-        2,
-        24,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2]
+        3,
+        3,
+        3,
+        11,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3]
 
     for query in queries:
         query.update(base_query)
 
-    util.make_subclusters(
+    util.make_subclusters_bing(
         queries=queries, rawdir=os.environ['BIRD_OR_NOT_RAW'],
         #webdir=os.environ['BIRD_OR_NOT_WEB'], n_images=20,
         #query_indices=[0, 1, 3], seed=0)
